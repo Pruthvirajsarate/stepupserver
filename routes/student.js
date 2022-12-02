@@ -1,6 +1,8 @@
 var express= require('express')
 var router= express.Router()
 var mongo=require('mongodb')
+var objectId=mongo.ObjectId
+var getConnection=require('./dbConn')
 
 router.get('/test',function(request,response,next){
     response.send('  hi this is sachin , i am from mumbai  ')
@@ -25,9 +27,7 @@ router.get('/testq',function(request,response,next){
 //register student
 router.post('/reg',function(request,response,next) {
     var document = request.body.data;
-    var url ="mongodb+srv://Stepup:Sarate2001@cluster0.hfqpawt.mongodb.net/?retryWrites=true&w=majority" 
-    var mongoClient=mongo.MongoClient
-    mongoClient.connect(url)
+    getConnection()
     .then((server)=>{
         var db = server.db('school')
         var collection=db.collection('students')
@@ -47,18 +47,55 @@ router.post('/reg',function(request,response,next) {
 
 })
 //update the student
-router.put('/update',function(request,response,next){
+router.put('/update/:id',function(request,response,next){
+      var id=request.params.id
+      var newData=request.body.data
+      delete newData._id
+      getConnection()
+      .then((server)=>{
+        var db = server.db('school')
+        var collection=db.collection('students')
+        collection.updateOne({_id:objectId(id)}, {$set:newData})
+        .then((res)=>{
+            response.send(res)
+        })
+        .catch((res)=>{
+            response.send(res)
+        })
+
+
+    })
+    .catch(()=>{
+        response.send('DB connection error')
+    })
+
+      
 
 })
 //delete the student
-router.delete('delete',function(request,response,next){
+router.delete('/delete',function(request,response,next){
+  var id = request.query.id;
+  getConnection()
+  .then((server)=>{
+    var db = server.db('school')
+    var collection=db.collection('students')
+    collection.deleteOne({_id:objectId(id)})
+    .then((res)=>{
+        response.send(res)
+    })
+    .catch((res)=>{
+        response.send(res)
+    })
 
+
+})
+.catch(()=>{
+    response.send('DB connection error')
+})
 })
 //get or retrive the student
 router.get('/get',function(request,response,next){
-    var url ="mongodb+srv://Stepup:Sarate2001@cluster0.hfqpawt.mongodb.net/?retryWrites=true&w=majority" 
-    var mongoClient=mongo.MongoClient
-    mongoClient.connect(url)
+    getConnection()
     .then(function(server){
         var db = server.db('school')
         var collection=db.collection('students')
